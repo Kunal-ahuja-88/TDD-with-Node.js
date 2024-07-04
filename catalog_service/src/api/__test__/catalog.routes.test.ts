@@ -69,7 +69,7 @@ describe("Catalog Routes",() => {
     })
 
     describe("PATCH /products/:id",() => {
-        test.only("should update product successfully",async () => {
+        test("should update product successfully",async () => {
            
             const product = ProductFactory.build()
             
@@ -133,7 +133,7 @@ describe("Catalog Routes",() => {
     })
 
     describe("GET /products?limit=0&offset=0",() => {
-        test.only("should return a range of products based on limit and offset",async () => {
+        test("should return a range of products based on limit and offset",async () => {
            
             const randomLimit = faker.number.int({min: 10, max: 50})
             const products = ProductFactory.buildList(randomLimit)
@@ -150,45 +150,47 @@ describe("Catalog Routes",() => {
             expect(response.status).toBe(200)
             expect(response.body).toEqual(products)
         });
-
-        test("should response with validation error 400",async () => {
+    })
+    describe("GET /products/:id",() => {
+        test("should get a product by id",async () => {
+           
+            
             const product = ProductFactory.build()
-            
-            const requestBody = {
-                name:product.name,
-                price:-1,
-                stock:product.stock
-            }
+        
 
-              const response = await request(app)
-            .patch(`/products/${product.id}`)
-            .send({...requestBody})
-            .set("Accept", "application/json");
-
-            console.log("TEST RESPONSE",response);
-
-            expect(response.status).toBe(400)
-            expect(response.body).toEqual("price must not be less than 1")
-        });
-
-        test("should response with an internal error code 500",async () => {
-            const product = ProductFactory.build()
-            
-            const requestBody = mockRequest()
-            
-            jest.spyOn(catalogService,'updateProduct')
-            .mockImplementationOnce(()=> Promise.reject(new Error("unable to update product")))
+            jest.spyOn(catalogService,'getProduct')
+            .mockImplementationOnce(()=> Promise.resolve(product))
 
             const response = await request(app)
-            .patch(`/products/${product.id}`)
-            .send(requestBody)
+            .get(`/products/${product.id}`)
             .set("Accept", "application/json");
 
             console.log("TEST RESPONSE",response);
-            expect(response.status).toBe(500)
-            expect(response.body).toEqual("unable to update product")
-
+            expect(response.status).toBe(200)
+            expect(response.body).toEqual(product)
         });
     })
+
+    describe("DELETE /products/:id",() => {
+        test("should delete a product by id",async () => {
+           
+            
+            const product = ProductFactory.build()
+        
+
+            jest.spyOn(catalogService,'deleteProduct')
+            .mockImplementationOnce(()=> Promise.resolve({id:product.id}))
+
+            const response = await request(app)
+            .delete(`/products/${product.id}`)
+            .set("Accept", "application/json");
+
+            console.log("TEST RESPONSE",response);
+            expect(response.status).toBe(200)
+            expect(response.body).toEqual({id:product.id})
+        });
+    });
+
+
 })
 
